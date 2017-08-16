@@ -1,0 +1,48 @@
+- hosts: jenkins
+  sudo: true
+#devnotes
+#  pre_tasks:
+#    - shell: add-apt-repository ppa:certbot/certbot -y
+#    - apt:
+#        update_cache: yes
+#        name: "{{ item }}"
+#      with_items:
+#        - letsencrypt
+#        - python-certbot-nginx
+#     - name: Create cert dir
+#       shell: mkdir /etc/nginx/ssl
+#       args:
+#         creates: /etc/nginx/ssl
+#     - name: Create server key
+#       shell: openssl genrsa -out server.key 2048
+#     - name: Create signing request
+#       shell: openssl req -new -key server.key -out server.csr -subj "/C=FI/ST=Uusimaa/L=Espoo/O=CSC/OU=CCCP/CN=ooo"
+#     - name: Sign
+#       shell: openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+#     - name: Copy server cert
+#       shell: cp server.crt /etc/nginx/ssl/_.crt
+#     - name: Copy server key
+#       shell: cp server.key /etc/nginx/ssl/_.key
+  roles:
+    - role: geerlingguy.certbot
+      certbot_auto_renew_user: cloud-user
+      certbot_auto_renew_minute: 20
+      certbot_auto_renew_hour: 5
+    - role: RealSalmon.jenkins-master
+      jenkins_master_nginx_ssl: true
+      jenkins_master_nginx_proxy: true
+  post_tasks:
+    - shell: service nginx stop
+    - shell: certbot register --agree-tos --email jukka.nousiainen@csc.fi
+      ignore_errors: true
+    - shell: dig +short -x $(curl http://ip4.me 2>&1|egrep -o '((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)')|sed 's/.$//'
+      register: fqdn
+    - shell: certbot certonly --noninteractive --standalone -d "{{ fqdn.stdout }}"
+    - shell: cd /etc/nginx/ssl;mv _.crt _.crt.old;mv _.key _.key.old
+      args:
+        creates: /etc/nginx/ssl/_.crt.old
+    - shell: "ln -s /etc/letsencrypt/live/{{ fqdn.stdout }}/privkey.pem /etc/nginx/ssl/_.crt"
+      ignore_errors: true
+    - shell: "ln -s /etc/letsencrypt/live/{{ fqdn.stdout }}/privkey.pem /etc/nginx/ssl/_.key"
+      ignore_errors: true
+    - shell: service nginx start

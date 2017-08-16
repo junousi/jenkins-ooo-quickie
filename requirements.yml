@@ -1,0 +1,7 @@
+- src: https://github.com/RealSalmon/ansible-jenkins-master.git
+  path: roles
+  name: RealSalmon.jenkins-master
+
+- src: https://github.com/geerlingguy/ansible-role-certbot.git
+  path: roles
+  name: geerlingguy.certbot
