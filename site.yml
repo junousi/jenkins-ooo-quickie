@@ -1,28 +1,5 @@
 - hosts: jenkins
   sudo: true
-#devnotes
-#  pre_tasks:
-#    - shell: add-apt-repository ppa:certbot/certbot -y
-#    - apt:
-#        update_cache: yes
-#        name: "{{ item }}"
-#      with_items:
-#        - letsencrypt
-#        - python-certbot-nginx
-#     - name: Create cert dir
-#       shell: mkdir /etc/nginx/ssl
-#       args:
-#         creates: /etc/nginx/ssl
-#     - name: Create server key
-#       shell: openssl genrsa -out server.key 2048
-#     - name: Create signing request
-#       shell: openssl req -new -key server.key -out server.csr -subj "/C=FI/ST=Uusimaa/L=Espoo/O=CSC/OU=CCCP/CN=ooo"
-#     - name: Sign
-#       shell: openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
-#     - name: Copy server cert
-#       shell: cp server.crt /etc/nginx/ssl/_.crt
-#     - name: Copy server key
-#       shell: cp server.key /etc/nginx/ssl/_.key
   roles:
     - role: geerlingguy.certbot
       certbot_auto_renew_user: cloud-user
